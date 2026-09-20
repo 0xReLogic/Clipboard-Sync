@@ -11,6 +11,7 @@
 [![Security](https://img.shields.io/badge/Security-AES--GCM--256-1ed760?style=flat)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
 [![Storage](https://img.shields.io/badge/Storage-0_Bytes-gray?style=flat)](https://github.com/0xReLogic/Clipboard-Sync)
 [![CI](https://github.com/0xReLogic/Clipboard-Sync/actions/workflows/ci.yml/badge.svg)](https://github.com/0xReLogic/Clipboard-Sync/actions/workflows/ci.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/0xReLogic/Clipboard-Sync)
 
 <br />
 
