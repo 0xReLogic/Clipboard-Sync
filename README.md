@@ -56,6 +56,8 @@ Sharing text, code snippets, tokens, and screenshots between computers and mobil
 - **Bounded RAM Footprint:** Client browsers maintain a strict 20-item ring buffer with automatic bitmap cleanup (`URL.revokeObjectURL`) to prevent memory leaks.
 - **Mobile Safari Optimized:** Uses synchronous clipboard write execution with fallback mechanisms to bypass mobile user gesture expiration.
 - **Installable PWA:** Supports Progressive Web App installation on Android, iOS (Add to Home Screen), macOS, and Windows for a fullscreen, native app feel.
+- **Anti-Macro Rate Limiting:** In-memory Token Bucket rate limiter (10 burst, 2/s refill) protects rooms from automated script flooding, closing abusive sockets via RFC 6455 `1008 Policy Violation`.
+- **Payload & Concurrency Guards:** Enforces a 5MB pre-parse payload cap (RFC 6455 `1009 Message Too Big`) and a strict 10-device concurrency limit to eliminate memory exhaustion.
 - **Near-Zero Operating Cost:** Powered by Cloudflare's WebSocket Hibernation API. The server sleeps when idle, resulting in virtually zero compute billing.
 
 ---
@@ -71,6 +73,9 @@ Clipboard-Sync is architected with a strict Zero-Knowledge posture:
 | **Nonce Policy** | 96-bit (12-byte) Cryptographic Nonce | Generated freshly for every single message via `crypto.getRandomValues()` to eliminate IV reuse risks. |
 | **Server Visibility** | Blind Relay | Cloudflare Workers only forward opaque ciphertext blobs and have no ability to decrypt payloads. |
 | **Persistence** | 0 Bytes on Server | No SQLite, KV, or database storage on server infrastructure. |
+| **Anti-Macro Rate Limit** | In-Memory Token Bucket (10 burst, 2/s refill) | Closes abusive high-frequency spam sockets with RFC 6455 `1008 Policy Violation`. |
+| **Payload Guard** | 5 MB Pre-Parse Cap | Rejects oversized payload strings with RFC 6455 `1009 Message Too Big` before JSON parsing. |
+| **Concurrency Guard** | 10 Devices Max per Room | Rejects 11th+ connections with `HTTP 429 Too Many Requests` to prevent memory exhaustion. |
 
 ---
 

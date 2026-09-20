@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Typecheck & Integration Tests
+    name: Build, Typecheck & Integration Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -30,35 +30,18 @@ jobs:
       - name: Monorepo Typecheck
         run: npm run typecheck
 
+      - name: Build Monorepo Workspaces (Generates web/dist for Wrangler Assets)
+        run: npm run build
+
+      - name: Verify Web Distribution Bundle
+        run: |
+          test -f apps/web/dist/index.html || { echo "apps/web/dist/index.html not found"; exit 1; }
+
       - name: Start Local Worker Relay
         run: |
           npx wrangler dev --port 8787 --ip 127.0.0.1 &
           npx -y wait-on http://127.0.0.1:8787/api/health --timeout 30000
         working-directory: apps/worker
 
-      - name: Run Headless Integration Tests
+      - name: Run Headless Integration & Security Tests
         run: npm run test:integration
-
-  build:
-    name: Production Build Verification
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build Monorepo Workspaces
-        run: npm run build
-
-      - name: Verify Web Distribution Bundle
-        run: |
-          test -f apps/web/dist/index.html || { echo "apps/web/dist/index.html not found"; exit 1; }

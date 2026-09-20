@@ -6,6 +6,7 @@ export const QuickInput: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const { publishClip } = useClipboard();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastPasteTimeRef = useRef(0);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -21,7 +22,10 @@ export const QuickInput: React.FC = () => {
     } catch (err) {
       console.error('Failed to publish clip:', err);
     } finally {
-      setIsSending(false);
+      // 300ms client cooldown to prevent accidental rapid double-submits
+      setTimeout(() => {
+        setIsSending(false);
+      }, 300);
     }
   };
 
@@ -38,10 +42,14 @@ export const QuickInput: React.FC = () => {
       const items = event.clipboardData?.items;
       if (!items) return;
 
+      const now = Date.now();
+      if (now - lastPasteTimeRef.current < 500) return;
+
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf('image') !== -1) {
           const blob = items[i].getAsFile();
           if (blob) {
+            lastPasteTimeRef.current = now;
             event.preventDefault();
             const reader = new FileReader();
             reader.onload = async (e) => {

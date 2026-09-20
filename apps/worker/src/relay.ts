@@ -17,7 +17,22 @@ export interface Env {
   ASSETS?: Fetcher;
 }
 
+// Security & Abuse Mitigation Constants
+const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024; // 5 MB RFC 6455 limit
+const MAX_PEERS_PER_ROOM = 10;              // Prevents DO socket exhaustion
+const RATE_LIMIT_BURST = 10;                // Max burst messages allowed
+const RATE_LIMIT_REFILL_PER_SEC = 2;        // Token refill rate per second
+const MAX_VIOLATIONS = 5;                   // Violations before socket termination
+
+interface RateLimitBucket {
+  tokens: number;
+  lastRefill: number;
+  violations: number;
+}
+
 export class ClipboardRelay extends DurableObject<Env> {
+  private rateLimits = new Map<WebSocket, RateLimitBucket>();
+
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
 
@@ -39,6 +54,15 @@ export class ClipboardRelay extends DurableObject<Env> {
 
     if (!deviceId) {
       return new Response('Missing deviceId parameter', { status: 400 });
+    }
+
+    // Guard: Prevent bot farms from exhausting DO memory allocation
+    const currentSockets = this.ctx.getWebSockets();
+    if (currentSockets.length >= MAX_PEERS_PER_ROOM) {
+      return new Response('Room capacity reached (maximum 10 devices per room)', {
+        status: 429,
+        headers: { 'Retry-After': '30' }
+      });
     }
 
     const webSocketPair = new WebSocketPair();
@@ -98,6 +122,39 @@ export class ClipboardRelay extends DurableObject<Env> {
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
     if (typeof message !== 'string') return;
+
+    // Guard 1: Pre-parse payload size guard (RFC 6455 1009)
+    if (message.length > MAX_PAYLOAD_BYTES) {
+      ws.close(1009, 'Message payload exceeds 5MB limit');
+      this.rateLimits.delete(ws);
+      return;
+    }
+
+    // Guard 2: In-memory token bucket rate limiter (RFC 6455 1008)
+    const now = Date.now();
+    let bucket = this.rateLimits.get(ws);
+    if (!bucket) {
+      bucket = { tokens: RATE_LIMIT_BURST, lastRefill: now, violations: 0 };
+      this.rateLimits.set(ws, bucket);
+    } else {
+      const elapsedSec = (now - bucket.lastRefill) / 1000;
+      bucket.tokens = Math.min(RATE_LIMIT_BURST, bucket.tokens + elapsedSec * RATE_LIMIT_REFILL_PER_SEC);
+      bucket.lastRefill = now;
+    }
+
+    if (bucket.tokens < 1) {
+      bucket.violations++;
+      if (bucket.violations >= MAX_VIOLATIONS) {
+        ws.close(1008, 'Rate limit violation (RFC 6455)');
+        this.rateLimits.delete(ws);
+        return;
+      }
+      ws.send(JSON.stringify({ type: 'error', message: 'Rate limit exceeded. Please slow down.' }));
+      return;
+    }
+
+    bucket.tokens -= 1;
+    bucket.violations = 0;
 
     try {
       const data = JSON.parse(message) as WSClientMessage;
@@ -164,6 +221,7 @@ export class ClipboardRelay extends DurableObject<Env> {
   }
 
   async webSocketClose(ws: WebSocket, _code: number, _reason: string, _wasClean: boolean): Promise<void> {
+    this.rateLimits.delete(ws);
     const meta = ws.deserializeAttachment() as PeerMeta | null;
     if (meta) {
       const leftMsg: PeerLeftMessage = {
@@ -175,6 +233,7 @@ export class ClipboardRelay extends DurableObject<Env> {
   }
 
   async webSocketError(ws: WebSocket, _error: unknown): Promise<void> {
+    this.rateLimits.delete(ws);
     try {
       ws.close(1011, 'Relay Runtime Error');
     } catch {

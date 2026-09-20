@@ -173,7 +173,90 @@ async function runTests() {
   // Clean up Client A
   wsA.close();
 
-  console.log('--- ALL INTEGRATION TESTS PASSED SUCCESSFULLY (9/9) ---');
+  // 9. Test In-Memory Token Bucket Rate Limiting (Anti-Macro)
+  console.log('Testing Token Bucket Rate Limiter...');
+  const rateLimitRoom = 'RATELM';
+  const wsSpam = new WebSocket(`${WS_BASE_URL}/ws?room=${rateLimitRoom}&deviceId=spammer&deviceName=SpamBot&os=Linux`);
+  await waitForSocketOpen(wsSpam);
+  const spamCollector = createMessageCollector(wsSpam);
+  await spamCollector.nextMessage(); // room_ready
+
+  // Fire 15 rapid messages (burst capacity is 10)
+  for (let i = 0; i < 15; i++) {
+    wsSpam.send(JSON.stringify({
+      type: 'clip_publish',
+      payload: {
+        itemId: `spam-${i}`,
+        type: 'text/plain',
+        ciphertext: 'c3BhbQ==',
+        senderName: 'SpamBot',
+        senderOs: 'Linux',
+        createdAt: Date.now(),
+        isPinned: false
+      }
+    }));
+  }
+
+  let rateLimitCaught = false;
+  try {
+    for (let i = 0; i < 5; i++) {
+      const resp = await spamCollector.nextMessage(2000);
+      if (resp && resp.type === 'error' && resp.message.includes('Rate limit exceeded')) {
+        rateLimitCaught = true;
+        break;
+      }
+    }
+  } catch {
+    // wsSpam may close with 1008 policy violation
+  }
+  assert(rateLimitCaught || wsSpam.readyState >= 2, 'Spam burst triggered rate limiter');
+  try { wsSpam.close(); } catch {}
+
+  // 10. Test Max Payload Size Guard (RFC 6455 1009)
+  console.log('Testing Pre-Parse Payload Guard...');
+  const wsBig = new WebSocket(`${WS_BASE_URL}/ws?room=BIGPAY&deviceId=bigdev&deviceName=BigPayload&os=Linux`);
+  await waitForSocketOpen(wsBig);
+  const bigCollector = createMessageCollector(wsBig);
+  await bigCollector.nextMessage(); // room_ready
+
+  const bigClosePromise = new Promise((resolve) => {
+    wsBig.onclose = (event) => resolve(event.code);
+  });
+
+  // Send a string larger than 5MB
+  const massivePayload = 'X'.repeat(5 * 1024 * 1024 + 1024);
+  wsBig.send(massivePayload);
+  const closeCode = await bigClosePromise;
+  assert(closeCode === 1009, `Payload exceeding 5MB rejected with RFC 6455 code 1009 (actual: ${closeCode})`);
+
+  // 11. Test Room Capacity Guard (Max 10 Devices)
+  console.log('Testing Room Capacity Guard...');
+  const capRoom = 'ROOMCP';
+  const sockets = [];
+  for (let i = 0; i < 10; i++) {
+    const ws = new WebSocket(`${WS_BASE_URL}/ws?room=${capRoom}&deviceId=dev_${i}&deviceName=Device${i}&os=Linux`);
+    await waitForSocketOpen(ws);
+    sockets.push(ws);
+  }
+  assert(sockets.length === 10, 'Successfully connected 10 peers to room');
+
+  // Attempt 11th connection (must be rejected due to room capacity)
+  const err11 = await new Promise((resolve) => {
+    const ws11 = new WebSocket(`${WS_BASE_URL}/ws?room=${capRoom}&deviceId=dev_11&deviceName=Device11&os=Linux`);
+    ws11.onerror = (err) => resolve(err.message || 'error_429');
+    ws11.onopen = () => {
+      ws11.close();
+      resolve('unexpected_open');
+    };
+  });
+  assert(err11.includes('429') || err11.includes('Unexpected server response') || err11.includes('error'), `11th peer rejected with Room Capacity Reached (result: ${err11})`);
+
+  // Cleanup capacity sockets
+  for (const s of sockets) {
+    try { s.close(); } catch {}
+  }
+
+  console.log('--- ALL INTEGRATION & SECURITY TESTS PASSED SUCCESSFULLY (12/12) ---');
   process.exit(0);
 }
 
