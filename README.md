@@ -10,10 +10,11 @@
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers_%26_DO-F38020?style=flat&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
 [![Security](https://img.shields.io/badge/Security-AES--GCM--256-1ed760?style=flat)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
 [![Storage](https://img.shields.io/badge/Storage-0_Bytes-gray?style=flat)](https://github.com/0xReLogic/Clipboard-Sync)
+[![CI](https://github.com/0xReLogic/Clipboard-Sync/actions/workflows/ci.yml/badge.svg)](https://github.com/0xReLogic/Clipboard-Sync/actions/workflows/ci.yml)
 
 <br />
 
-[Live Demo](https://clipboard-sync-worker.relogic.workers.dev) | [Documentation](https://clipboard-sync-worker.relogic.workers.dev/#docs) | [Report Bug](https://github.com/0xReLogic/Clipboard-Sync/issues) | [Request Feature](https://github.com/0xReLogic/Clipboard-Sync/issues)
+[Live](https://clipboard-sync-worker.relogic.workers.dev) | [Documentation](https://clipboard-sync-worker.relogic.workers.dev/#docs) | [Report Bug](https://github.com/0xReLogic/Clipboard-Sync/issues) | [Request Feature](https://github.com/0xReLogic/Clipboard-Sync/issues)
 
 </div>
 
