@@ -10,6 +10,7 @@
     "dev:worker": "npm run dev --workspace=apps/worker",
     "dev:web": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspaces --if-present",
+    "deploy": "npm run build && npm run deploy --workspace=apps/worker",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test:integration": "node test-integration.mjs"
   },
