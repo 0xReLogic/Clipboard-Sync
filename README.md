@@ -15,19 +15,14 @@
 
 [Live Demo](https://your-domain.com) | [Documentation](https://your-domain.com/#docs) | [Report Bug](https://github.com/0xReLogic/Clipboard-Sync/issues) | [Request Feature](https://github.com/0xReLogic/Clipboard-Sync/issues)
 
-<br />
-<br />
-
-<img src="docs/assets/01-landing-page.png" alt="Clipboard-Sync Landing Page" width="850">
-
 </div>
 
 ---
 
-## Interactive Walkthrough
+## Walkthrough
 
 <p align="center">
-  <img src="docs/assets/demo-preview.gif" alt="Clipboard-Sync Interactive Demo" width="850">
+  <img src="docs/assets/demo-preview.gif" alt="Clipboard-Sync Demo Walkthrough" width="850">
 </p>
 
 ---
