@@ -1,3 +1,6 @@
+import WS from 'ws';
+
+const WebSocket = globalThis.WebSocket || WS;
 const PORT = 8787;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const WS_BASE_URL = `ws://127.0.0.1:${PORT}`;
