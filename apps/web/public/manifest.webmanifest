@@ -1,0 +1,25 @@
+{
+  "name": "Clipboard-Sync",
+  "short_name": "ClipSync",
+  "description": "Zero-Knowledge Cross-Device Clipboard Synchronization",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0e0c",
+  "theme_color": "#0b0e0c",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "32x32 48x48",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
