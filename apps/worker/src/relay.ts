@@ -115,22 +115,34 @@ export class ClipboardRelay extends DurableObject<Env> {
           break;
         }
 
+        case 'peer_state_request': {
+          const requestMsg: PeerStateRequestMessage = {
+            type: 'peer_state_request',
+            requesterDeviceId: senderDeviceId
+          };
+          this.broadcastToOthers(ws, JSON.stringify(requestMsg));
+          break;
+        }
+
         case 'peer_state_transfer': {
           const targetDeviceId = data.targetDeviceId;
           if (targetDeviceId) {
-            const targets = this.ctx.getWebSockets(targetDeviceId);
             const forwardMsg: PeerStateTransferMessage = {
               type: 'peer_state_transfer',
               fromDeviceId: senderDeviceId,
               targetDeviceId,
+              roomKey: data.roomKey,
               clips: data.clips
             };
             const serialized = JSON.stringify(forwardMsg);
-            for (const targetWs of targets) {
-              try {
-                targetWs.send(serialized);
-              } catch {
-                // Handled on close
+            for (const targetWs of this.ctx.getWebSockets()) {
+              const targetMeta = targetWs.deserializeAttachment() as PeerMeta | null;
+              if (targetMeta?.deviceId === targetDeviceId) {
+                try {
+                  targetWs.send(serialized);
+                } catch {
+                  // Handled on close
+                }
               }
             }
           }
@@ -171,13 +183,19 @@ export class ClipboardRelay extends DurableObject<Env> {
   }
 
   private broadcastToOthers(senderWs: WebSocket, message: string): void {
-    for (const ws of this.ctx.getWebSockets()) {
-      if (ws !== senderWs) {
-        try {
-          ws.send(message);
-        } catch {
-          // Handled on close
-        }
+    const senderMeta = senderWs.deserializeAttachment() as PeerMeta | null;
+    const senderDeviceId = senderMeta?.deviceId;
+    const sockets = this.ctx.getWebSockets();
+
+    for (const ws of sockets) {
+      const targetMeta = ws.deserializeAttachment() as PeerMeta | null;
+      if (senderDeviceId && targetMeta?.deviceId === senderDeviceId) {
+        continue;
+      }
+      try {
+        ws.send(message);
+      } catch {
+        // Handled on close
       }
     }
   }

@@ -42,8 +42,17 @@ export default {
       );
     }
 
+    if (url.pathname === '/docs' || url.pathname === '/docs/') {
+      if (env.ASSETS) {
+        return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+      }
+    }
+
     if (url.pathname === '/ws') {
-      const roomId = url.searchParams.get('room')?.toUpperCase();
+      const rawRoom = url.searchParams.get('room') || '';
+      // Crockford Base32 normalization: normalize confusing glyphs (O->0, I/L->1)
+      const roomId = rawRoom.toUpperCase().replace(/O/g, '0').replace(/[IL]/g, '1').trim();
+
       if (!roomId || !/^[0-9A-HJKMNP-Z]{6}$/.test(roomId)) {
         return new Response('Invalid 6-character Crockford Base32 Room ID', {
           status: 400,
@@ -51,19 +60,8 @@ export default {
         });
       }
 
-      // Geo-Optimization: Route Durable Object instantiation to closest geographical region
-      const continent = (request as unknown as { cf?: { continent?: string } }).cf?.continent;
-      let locationHint: 'apac' | 'weur' | 'eeur' | 'wnam' | 'enam' | 'oc' | 'sam' | 'afr' | undefined;
-
-      if (continent === 'AS') locationHint = 'apac';
-      else if (continent === 'EU') locationHint = 'weur';
-      else if (continent === 'NA') locationHint = 'wnam';
-      else if (continent === 'OC') locationHint = 'oc';
-      else if (continent === 'SA') locationHint = 'sam';
-      else if (continent === 'AF') locationHint = 'afr';
-
       const id = env.CLIPBOARD_RELAYS.idFromName(roomId);
-      const stub = env.CLIPBOARD_RELAYS.get(id, locationHint ? { locationHint } : undefined);
+      const stub = env.CLIPBOARD_RELAYS.get(id);
 
       return stub.fetch(request);
     }

@@ -32,10 +32,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQR }) => {
     }
   };
 
+  const otherPeers = peers.filter(p => p.deviceId !== deviceId);
+  const isPeerReady = status === 'connected' && otherPeers.length > 0;
+
   const getStatusLabel = () => {
     switch (status) {
       case 'connected':
-        return 'Connected';
+        return otherPeers.length === 0 ? 'Waiting for peer (1 device)' : `Connected (${peers.length} devices)`;
       case 'reconnecting':
         return 'Reconnecting';
       case 'connecting':
@@ -55,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQR }) => {
             <strong>{roomId}</strong>
           </div>
           <div className="status-pill">
-            <span className={`status-dot ${status}`} />
+            <span className={`status-dot ${status === 'connected' ? (isPeerReady ? 'connected' : 'waiting') : status}`} />
             <span>{getStatusLabel()}</span>
           </div>
         </div>

@@ -40,10 +40,35 @@ export const RoomJoin: React.FC<JoinProps> = ({ onJoin, onOpenDocs }) => {
 
   const handleManualJoin = (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = inputCode.trim().toUpperCase();
-    if (clean.length === 6) {
+    const raw = inputCode.trim();
+
+    // Smart-detect full invite URL or hash fragment
+    if (raw.includes('#') || raw.includes('room=')) {
+      try {
+        const hashPart = raw.includes('#') ? raw.split('#')[1] : raw;
+        const params = new URLSearchParams(hashPart);
+        const parsedRoom = params.get('room');
+        const parsedKey = params.get('key');
+        if (parsedRoom && /^[0-9A-HJKMNP-Z]{6}$/i.test(parsedRoom)) {
+          onJoin(parsedRoom.toUpperCase(), parsedKey || undefined);
+          return;
+        }
+      } catch {
+        // Fallback to plain code
+      }
+    }
+
+    const clean = raw.toUpperCase();
+    if (/^[0-9A-HJKMNP-Z]{6}$/.test(clean)) {
       onJoin(clean);
     }
+  };
+
+  const isJoinDisabled = () => {
+    const raw = inputCode.trim();
+    if (raw.length === 6) return false;
+    if (raw.includes('room=') || raw.includes('#')) return false;
+    return true;
   };
 
   return (
@@ -78,10 +103,9 @@ export const RoomJoin: React.FC<JoinProps> = ({ onJoin, onOpenDocs }) => {
           <form onSubmit={handleManualJoin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input
               type="text"
-              maxLength={6}
               value={inputCode}
-              onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-              placeholder="Enter 6-char Room Code"
+              onChange={(e) => setInputCode(e.target.value)}
+              placeholder="Enter 6-char Code or Paste Link"
               style={{
                 background: 'var(--bg-input)',
                 border: '1px solid var(--border-subtle)',
@@ -89,9 +113,9 @@ export const RoomJoin: React.FC<JoinProps> = ({ onJoin, onOpenDocs }) => {
                 padding: '12px',
                 color: 'var(--text-primary)',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '16px',
+                fontSize: '15px',
                 textAlign: 'center',
-                letterSpacing: '2px',
+                letterSpacing: inputCode.length <= 6 ? '2px' : '0px',
                 outline: 'none'
               }}
             />
@@ -99,7 +123,7 @@ export const RoomJoin: React.FC<JoinProps> = ({ onJoin, onOpenDocs }) => {
               type="submit"
               className="btn-secondary"
               style={{ width: '100%' }}
-              disabled={inputCode.trim().length !== 6}
+              disabled={isJoinDisabled()}
             >
               Join Room
             </button>

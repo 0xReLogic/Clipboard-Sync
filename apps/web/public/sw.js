@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clipsync-shell-v1';
+const CACHE_NAME = 'clipsync-shell-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -32,6 +32,22 @@ self.addEventListener('fetch', (event) => {
 
   // Bypass caching for WebSocket and API endpoints
   if (url.pathname.startsWith('/api') || url.pathname.startsWith('/ws')) {
+    return;
+  }
+
+  // Network-First for HTML navigation so newly deployed bundles are immediately picked up
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
     return;
   }
 

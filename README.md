@@ -13,7 +13,7 @@
 
 <br />
 
-[Live Demo](https://your-domain.com) | [Documentation](https://your-domain.com/#docs) | [Report Bug](https://github.com/0xReLogic/Clipboard-Sync/issues) | [Request Feature](https://github.com/0xReLogic/Clipboard-Sync/issues)
+[Live Demo](https://clipboard-sync-worker.relogic.workers.dev) | [Documentation](https://clipboard-sync-worker.relogic.workers.dev/#docs) | [Report Bug](https://github.com/0xReLogic/Clipboard-Sync/issues) | [Request Feature](https://github.com/0xReLogic/Clipboard-Sync/issues)
 
 </div>
 
@@ -49,6 +49,8 @@ Sharing text, code snippets, tokens, and screenshots between computers and mobil
 - **Multi-Format Clipboard:** Synchronize plain text, code blocks, and image screenshots (PNG/JPEG/WebP up to 5MB) via direct `Ctrl+V` paste or file picker.
 - **Pure Ephemeral State:** When all devices close their browser tabs, the room and all its clipboard data permanently self-destruct.
 - **Peer-to-Peer State Transfer:** Late-joining devices receive clipboard history directly from the RAM of an active peer through a blind relay.
+- **Auto-Key Handshake:** Late-joining peers automatically request and receive the session encryption key from active peers directly in volatile RAM without manual key entry.
+- **Real-Time Presence Clarity:** Granular header indicators distinguish between waiting for peers (`Waiting for peer (1 device)`) and full-duplex sync (`Connected (2 devices)`).
 - **Bounded RAM Footprint:** Client browsers maintain a strict 20-item ring buffer with automatic bitmap cleanup (`URL.revokeObjectURL`) to prevent memory leaks.
 - **Mobile Safari Optimized:** Uses synchronous clipboard write execution with fallback mechanisms to bypass mobile user gesture expiration.
 - **Installable PWA:** Supports Progressive Web App installation on Android, iOS (Add to Home Screen), macOS, and Windows for a fullscreen, native app feel.
@@ -88,8 +90,8 @@ Clipboard-Sync is architected with a strict Zero-Knowledge posture:
 |                                                                          |
 |   +------------------------------------------------------------------+   |
 |   | Worker Gateway (`apps/worker/src/index.ts`)                      |   |
-|   | - Consistent Hash Resolution                                     |   |
-|   | - Geo-Optimization via `locationHint` (Nearest Data Center)       |   |
+|   | - Crockford Base32 Normalized Room Resolution                    |   |
+|   | - Globally Deterministic Singleton Durable Object Routing        |   |
 |   +---------------------------------+--------------------------------+   |
 |                                     | DO Binding                         |
 |                                     v                                    |
@@ -97,7 +99,8 @@ Clipboard-Sync is architected with a strict Zero-Knowledge posture:
 |   | Durable Object Relay (`apps/worker/src/relay.ts`)                |   |
 |   | - Zero Storage Bindings (No Database, No Disk I/O)               |   |
 |   | - WebSocket Hibernation API (Zero Idle Compute Cost)             |   |
-|   | - Tagged Connection Routing (`ctx.acceptWebSocket`)              |   |
+|   | - In-Memory Attachment Routing (Bypasses 32-byte Tag Limit)      |   |
+|   | - Peer-to-Peer Ephemeral Cryptographic Key Handshake             |   |
 |   | - Automatic Edge Ping/Pong Responses                             |   |
 |   +------------------------------------------------------------------+   |
 +--------------------------------------------------------------------------+

@@ -75,6 +75,7 @@ export interface PeerStateTransferMessage {
   type: 'peer_state_transfer';
   targetDeviceId?: string;
   fromDeviceId?: string;
+  roomKey?: string;
   clips: ClipItemPayload[];
 }
 
@@ -101,6 +102,7 @@ export interface ErrorMessage {
 
 export type WSClientMessage =
   | ClipPublishMessage
+  | PeerStateRequestMessage
   | PeerStateTransferMessage
   | ClipDeleteMessage;
 

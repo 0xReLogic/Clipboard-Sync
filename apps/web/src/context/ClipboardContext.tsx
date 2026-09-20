@@ -68,6 +68,7 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
 
   const deviceIdRef = useRef<string>(crypto.randomUUID());
   const cryptoRef = useRef<EphemeralCrypto>(new EphemeralCrypto());
+  const cryptoKeyRef = useRef<string>(initialKey || '');
   const ringBufferRef = useRef<MemoryRingBuffer>(new MemoryRingBuffer());
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
@@ -81,6 +82,7 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
         const resolvedKey = await cryptoRef.current.initKey(initialKey);
         if (active) {
           setCryptoKey(resolvedKey);
+          cryptoKeyRef.current = resolvedKey;
           // Persist key strictly in URL fragment hash so server never sees it
           window.location.hash = `room=${roomId}&key=${resolvedKey}`;
         }
@@ -125,9 +127,9 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
       }
 
       case 'peer_state_request': {
-        // Active peer receives request to transfer in-memory clips to newly joined device
-        const currentClips = ringBufferRef.current.getAll();
-        if (currentClips.length > 0 && wsRef.current?.readyState === WebSocket.OPEN) {
+        // Active peer receives request to transfer in-memory clips and session key to newly joined device
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          const currentClips = ringBufferRef.current.getAll();
           const payloadList: ClipItemPayload[] = [];
           for (const clip of currentClips) {
             try {
@@ -151,6 +153,7 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
           const transferMsg: PeerStateTransferMessage = {
             type: 'peer_state_transfer',
             targetDeviceId: msg.requesterDeviceId,
+            roomKey: cryptoKeyRef.current,
             clips: payloadList
           };
           wsRef.current.send(JSON.stringify(transferMsg));
@@ -159,36 +162,49 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
       }
 
       case 'peer_state_transfer': {
-        // Late-joiner receives initial state from active peer
-        for (const clipPayload of msg.clips) {
+        // Late-joiner receives initial state & session key from active peer
+        if (msg.roomKey && msg.roomKey !== cryptoKeyRef.current) {
           try {
-            const decrypted = await cryptoRef.current.decrypt({
-              iv: clipPayload.iv,
-              ciphertext: clipPayload.ciphertext
-            });
-
-            let previewUrl: string | undefined;
-            if (clipPayload.contentType === 'image/png') {
-              previewUrl = decrypted;
-            }
-
-            const inMemory: InMemoryClip = {
-              itemId: clipPayload.itemId,
-              contentType: clipPayload.contentType,
-              decryptedContent: decrypted,
-              previewUrl,
-              previewMeta: clipPayload.previewMeta,
-              senderDeviceId: msg.fromDeviceId || 'peer',
-              senderName: clipPayload.senderName,
-              senderOs: clipPayload.senderOs,
-              createdAt: clipPayload.createdAt,
-              isPinned: !!clipPayload.isPinned
-            };
-
-            const updated = ringBufferRef.current.push(inMemory);
-            setClips(updated);
+            await cryptoRef.current.initKey(msg.roomKey);
+            setCryptoKey(msg.roomKey);
+            cryptoKeyRef.current = msg.roomKey;
+            window.location.hash = `room=${roomId}&key=${msg.roomKey}`;
           } catch (err) {
-            console.warn('Failed to decrypt clip in state transfer:', err);
+            console.error('Failed to adopt host encryption key:', err);
+          }
+        }
+
+        if (msg.clips && msg.clips.length > 0) {
+          for (const clipPayload of msg.clips) {
+            try {
+              const decrypted = await cryptoRef.current.decrypt({
+                iv: clipPayload.iv,
+                ciphertext: clipPayload.ciphertext
+              });
+
+              let previewUrl: string | undefined;
+              if (clipPayload.contentType === 'image/png') {
+                previewUrl = decrypted;
+              }
+
+              const inMemory: InMemoryClip = {
+                itemId: clipPayload.itemId,
+                contentType: clipPayload.contentType,
+                decryptedContent: decrypted,
+                previewUrl,
+                previewMeta: clipPayload.previewMeta,
+                senderDeviceId: msg.fromDeviceId || 'peer',
+                senderName: clipPayload.senderName,
+                senderOs: clipPayload.senderOs,
+                createdAt: clipPayload.createdAt,
+                isPinned: !!clipPayload.isPinned
+              };
+
+              const updated = ringBufferRef.current.push(inMemory);
+              setClips(updated);
+            } catch (err) {
+              console.warn('Failed to decrypt clip in state transfer:', err);
+            }
           }
         }
         break;
@@ -223,7 +239,13 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
           const updated = ringBufferRef.current.push(inMemory);
           setClips(updated);
         } catch (err) {
-          console.warn('Failed to decrypt broadcast clip:', err);
+          console.warn('Failed to decrypt broadcast clip (key mismatch). Requesting key re-sync:', err);
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+              type: 'peer_state_request',
+              requesterDeviceId: deviceIdRef.current
+            }));
+          }
         }
         break;
       }
@@ -234,7 +256,7 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
         break;
       }
     }
-  }, []);
+  }, [roomId]);
 
   // WebSocket Connection Management with Exponential Backoff
   const connect = useCallback(() => {
@@ -254,6 +276,17 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
     ws.onopen = () => {
       setStatus('connected');
       reconnectAttemptRef.current = 0;
+      // Proactively request key & in-memory state from existing room host
+      if (!initialKey) {
+        try {
+          ws.send(JSON.stringify({
+            type: 'peer_state_request',
+            requesterDeviceId: deviceIdRef.current
+          }));
+        } catch {
+          // Socket error handled in onerror
+        }
+      }
     };
 
     ws.onmessage = (event) => {
