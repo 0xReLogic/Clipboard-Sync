@@ -11,7 +11,7 @@
     "@clipboard-sync/shared": "*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250224.0",
+    "@cloudflare/workers-types": "^5.20260917.1",
     "wrangler": "^3.111.0"
   }
 }
