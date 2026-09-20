@@ -338,11 +338,8 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBack }) => {
               <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>1. Clone Repository</div>
               <pre style={codeBlockStyle}><code>git clone https://github.com/0xReLogic/Clipboard-Sync.git{'\n'}cd Clipboard-Sync{'\n'}npm install</code></pre>
 
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '16px 0 8px' }}>2. Deploy Worker Relay</div>
-              <pre style={codeBlockStyle}><code>cd apps/worker{'\n'}npx wrangler deploy</code></pre>
-
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '16px 0 8px' }}>3. Build & Deploy Frontend to Cloudflare Pages</div>
-              <pre style={codeBlockStyle}><code>cd ../web{'\n'}npm run build{'\n'}npx wrangler pages deploy dist --project-name=clipboard-sync</code></pre>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '16px 0 8px' }}>2. Build & Deploy Fullstack Worker</div>
+              <pre style={codeBlockStyle}><code>npm run build{'\n'}cd apps/worker{'\n'}npx wrangler deploy</code></pre>
             </div>
           </section>
         </main>

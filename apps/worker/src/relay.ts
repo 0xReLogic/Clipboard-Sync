@@ -14,6 +14,7 @@ import type {
 
 export interface Env {
   CLIPBOARD_RELAYS: DurableObjectNamespace<ClipboardRelay>;
+  ASSETS?: Fetcher;
 }
 
 export class ClipboardRelay extends DurableObject<Env> {

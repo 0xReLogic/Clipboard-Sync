@@ -163,31 +163,26 @@ Open `http://localhost:5173` in your browser.
 
 ## Deployment Guide
 
-### Deploying the Backend (Cloudflare Workers)
+Clipboard-Sync leverages **Cloudflare Workers with Static Assets**. You can deploy both the React PWA frontend and the Durable Object backend simultaneously in a **single deployment**:
+
+### Unified Fullstack Deployment
 
 1. Authenticate with Wrangler:
    ```bash
    npx wrangler login
    ```
-2. Deploy the Worker and Durable Object:
+2. Build frontend and deploy fullstack worker:
    ```bash
+   npm run build
    cd apps/worker
    npx wrangler deploy
    ```
 
-### Deploying the Frontend (Cloudflare Pages)
-
-1. Build the production web bundle:
-   ```bash
-   cd apps/web
-   npm run build
-   ```
-2. Deploy the generated `dist/` directory to Cloudflare Pages:
-   ```bash
-   npx wrangler pages deploy dist --project-name=clipboard-sync
-   ```
-
-Alternatively, connect your GitHub repository directly to Cloudflare Pages with build command `npm run build` and output directory `apps/web/dist`.
+Cloudflare will automatically:
+- Upload and host static assets (`apps/web/dist`) on Cloudflare's Edge CDN.
+- Automatically provision and bind the `CLIPBOARD_RELAYS` Durable Object namespace.
+- Execute SQLite migrations for the `ClipboardRelay` class.
+- Serve frontend, API, and WebSockets on a single unified domain with zero CORS issues.
 
 ---
 

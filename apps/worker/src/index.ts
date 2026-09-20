@@ -68,6 +68,11 @@ export default {
       return stub.fetch(request);
     }
 
+    // Serve frontend static assets (SPA)
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
+    }
+
     return new Response('Not Found', { status: 404, headers: corsHeaders });
   }
 };
