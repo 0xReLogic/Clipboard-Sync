@@ -17,6 +17,6 @@
   "devDependencies": {
     "puppeteer": "^25.11.0",
     "typescript": "^7.0.2",
-    "ws": "^8.18.0"
+    "ws": "^8.21.3"
   }
 }
