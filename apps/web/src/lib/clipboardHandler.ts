@@ -49,3 +49,18 @@ export async function copyImageToClipboard(base64Data: string): Promise<boolean>
   }
   return false;
 }
+
+export function downloadFile(dataUrl: string, fileName: string): boolean {
+  try {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = fileName || 'download';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return true;
+  } catch (err) {
+    console.error('Failed to trigger file download:', err);
+    return false;
+  }
+}

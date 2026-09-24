@@ -21,7 +21,11 @@ interface ClipboardContextValue {
   deviceId: string;
   peers: PeerMeta[];
   clips: InMemoryClip[];
-  publishClip: (content: string, contentType?: ContentType) => Promise<void>;
+  publishClip: (
+    content: string,
+    contentType?: ContentType,
+    meta?: InMemoryClip['previewMeta']
+  ) => Promise<void>;
   togglePin: (itemId: string) => void;
   deleteClip: (itemId: string) => void;
   leaveRoom: () => void;
@@ -326,7 +330,11 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
   }, [connect]);
 
   // Publish new clip to room
-  const publishClip = useCallback(async (content: string, contentType: ContentType = 'text/plain') => {
+  const publishClip = useCallback(async (
+    content: string,
+    contentType: ContentType = 'text/plain',
+    meta?: InMemoryClip['previewMeta']
+  ) => {
     if (!content.trim()) return;
 
     const itemId = crypto.randomUUID();
@@ -345,7 +353,8 @@ export const ClipboardProvider: React.FC<ProviderProps> = ({
       previewUrl,
       previewMeta: {
         charCount: content.length,
-        lineCount: content.split('\n').length
+        lineCount: content.split('\n').length,
+        ...meta
       },
       senderDeviceId: deviceIdRef.current,
       senderName: detectDeviceName(),

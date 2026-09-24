@@ -48,7 +48,7 @@ Sharing text, code snippets, tokens, and screenshots between computers and mobil
 ## Key Features
 
 - **Instant Ad-Hoc Pairing:** Join rooms instantly with 6-character Crockford Base32 room codes or a 1-second QR code scan with your smartphone camera.
-- **Multi-Format Clipboard:** Synchronize plain text, code blocks, and image screenshots (PNG/JPEG/WebP up to 5MB) via direct `Ctrl+V` paste or file picker.
+- **Multi-Format & Document Sync:** Synchronize plain text, code blocks, screenshots, and arbitrary file attachments (PDF, documents, archives, images up to 3.5MB) via drag-and-drop, file picker, or direct `Ctrl+V` paste with one-click download on all connected devices.
 - **Pure Ephemeral State:** When all devices close their browser tabs, the room and all its clipboard data permanently self-destruct.
 - **Peer-to-Peer State Transfer:** Late-joining devices receive clipboard history directly from the RAM of an active peer through a blind relay.
 - **Auto-Key Handshake:** Late-joining peers automatically request and receive the session encryption key from active peers directly in volatile RAM without manual key entry.
@@ -166,7 +166,8 @@ Open `http://localhost:5173` in your browser.
 ## Keyboard Shortcuts
 
 - `Ctrl + Enter` (or `Cmd + Enter`): Send typed text or code to the room instantly.
-- `Ctrl + V` (or `Cmd + V`): Paste an image screenshot directly from your clipboard anywhere on the page.
+- `Ctrl + V` (or `Cmd + V`): Paste an image screenshot or copied file directly from your clipboard anywhere on the page.
+- `Drag & Drop`: Drop any file (PDF, document, archive, image up to 3.5MB) into the input box to encrypt and sync.
 - `Esc`: Close open modal windows (QR Code Pairing modal).
 
 ---

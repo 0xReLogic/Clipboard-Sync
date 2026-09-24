@@ -157,7 +157,36 @@ async function runTests() {
   assert(broadcastA.senderDeviceId === 'dev_B', 'Broadcast sender is dev_B');
   assert(broadcastA.payload.itemId === 'test-item-2', 'Broadcast payload itemId matches');
 
-  // 7. Test Clip Deletion
+  // 7. Test Encrypted File Attachment Broadcast
+  const fileClipFromA = {
+    itemId: 'test-file-3',
+    contentType: 'application/octet-stream',
+    iv: 'ZmlsZS1pdi1jbGllbnQtYQ==',
+    ciphertext: 'ZW5jcnlwdGVkLWJpbmFyeS1maWxlLWRhdGE=',
+    previewMeta: {
+      fileName: 'system-spec.pdf',
+      fileSize: 1048576,
+      mimeType: 'application/pdf',
+      byteSize: 1048576
+    },
+    senderName: 'MacBookPro',
+    senderOs: 'macOS',
+    createdAt: Date.now(),
+    isPinned: false
+  };
+
+  wsA.send(JSON.stringify({
+    type: 'clip_publish',
+    payload: fileClipFromA
+  }));
+
+  const fileBroadcastB = await collectorB.nextMessage();
+  assert(fileBroadcastB.type === 'clip_broadcast', 'Client B received file attachment clip_broadcast');
+  assert(fileBroadcastB.payload.contentType === 'application/octet-stream', 'File contentType is application/octet-stream');
+  assert(fileBroadcastB.payload.previewMeta.fileName === 'system-spec.pdf', 'Transferred fileName matches');
+  assert(fileBroadcastB.payload.previewMeta.fileSize === 1048576, 'Transferred fileSize matches');
+
+  // 8. Test Clip Deletion
   wsA.send(JSON.stringify({
     type: 'clip_delete',
     itemId: 'test-item-2'
@@ -167,7 +196,7 @@ async function runTests() {
   assert(deleteB.type === 'clip_delete', 'Client B received clip_delete');
   assert(deleteB.itemId === 'test-item-2', 'Deleted itemId matches');
 
-  // 8. Test Disconnect & Peer Left Notification
+  // 9. Test Disconnect & Peer Left Notification
   wsB.close();
   const leftA = await collectorA.nextMessage();
   assert(leftA.type === 'peer_left', 'Client A received peer_left event');
@@ -176,7 +205,7 @@ async function runTests() {
   // Clean up Client A
   wsA.close();
 
-  // 9. Test In-Memory Token Bucket Rate Limiting (Anti-Macro)
+  // 10. Test In-Memory Token Bucket Rate Limiting (Anti-Macro)
   console.log('Testing Token Bucket Rate Limiter...');
   const rateLimitRoom = 'RATELM';
   const wsSpam = new WebSocket(`${WS_BASE_URL}/ws?room=${rateLimitRoom}&deviceId=spammer&deviceName=SpamBot&os=Linux`);
@@ -215,7 +244,7 @@ async function runTests() {
   assert(rateLimitCaught || wsSpam.readyState >= 2, 'Spam burst triggered rate limiter');
   try { wsSpam.close(); } catch {}
 
-  // 10. Test Max Payload Size Guard (RFC 6455 1009)
+  // 11. Test Max Payload Size Guard (RFC 6455 1009)
   console.log('Testing Pre-Parse Payload Guard...');
   const wsBig = new WebSocket(`${WS_BASE_URL}/ws?room=BIGPAY&deviceId=bigdev&deviceName=BigPayload&os=Linux`);
   await waitForSocketOpen(wsBig);
@@ -232,7 +261,7 @@ async function runTests() {
   const closeCode = await bigClosePromise;
   assert(closeCode === 1009, `Payload exceeding 5MB rejected with RFC 6455 code 1009 (actual: ${closeCode})`);
 
-  // 11. Test Room Capacity Guard (Max 10 Devices)
+  // 12. Test Room Capacity Guard (Max 10 Devices)
   console.log('Testing Room Capacity Guard...');
   const capRoom = 'ROOMCP';
   const sockets = [];
@@ -259,7 +288,7 @@ async function runTests() {
     try { s.close(); } catch {}
   }
 
-  console.log('--- ALL INTEGRATION & SECURITY TESTS PASSED SUCCESSFULLY (12/12) ---');
+  console.log('--- ALL INTEGRATION & SECURITY TESTS PASSED SUCCESSFULLY (13/13) ---');
   process.exit(0);
 }
 

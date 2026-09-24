@@ -181,7 +181,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBack }) => {
                 <div style={stepBadgeStyle}>Step 3</div>
                 <div style={{ fontWeight: 600, marginBottom: '6px' }}>Sync in Real-Time</div>
                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                  Type text, paste code, or press <code>Ctrl+V</code> anywhere on the page to paste screenshots instantly across all active peers.
+                  Type text, paste code, drag & drop files, or attach documents (PDF, archives, media up to 3.5MB) to sync instantly across all active peers with one-click download.
                 </div>
               </div>
             </div>
@@ -263,7 +263,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBack }) => {
                   <strong style={{ color: 'var(--text-primary)' }}>20-Item Bounded Ring Buffer:</strong> Client browsers maintain an in-memory buffer limited to 20 items. Older unpinned items are automatically evicted to preserve memory.
                 </li>
                 <li>
-                  <strong style={{ color: 'var(--text-primary)' }}>Automatic Blob URL Cleanup:</strong> Image attachments allocate temporary blob URLs that are cleaned up via <code>URL.revokeObjectURL</code> upon eviction to prevent browser memory leaks.
+                  <strong style={{ color: 'var(--text-primary)' }}>Automatic Blob URL Cleanup:</strong> Image and file attachments allocate temporary blob URLs and memory buffers that are cleaned up via <code>URL.revokeObjectURL</code> upon eviction to prevent browser memory leaks.
                 </li>
                 <li>
                   <strong style={{ color: 'var(--text-primary)' }}>Peer State Transfer:</strong> When a late-joining peer connects, the active room host pushes existing items directly through the encrypted relay so historical state is synchronized without server persistence.
@@ -316,8 +316,13 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onBack }) => {
                 </tr>
                 <tr>
                   <td style={tdStyle}><kbd style={kbdStyle}>Ctrl</kbd> + <kbd style={kbdStyle}>V</kbd></td>
-                  <td style={tdStyle}>Paste image screenshot directly into clipboard</td>
+                  <td style={tdStyle}>Paste image screenshot or copied file directly into room</td>
                   <td style={tdStyle}>Global (Anywhere on page)</td>
+                </tr>
+                <tr>
+                  <td style={tdStyle}><kbd style={kbdStyle}>Drag & Drop</kbd></td>
+                  <td style={tdStyle}>Drop any document, archive, or media file (up to 3.5MB) to encrypt and sync</td>
+                  <td style={tdStyle}>Quick Input Card</td>
                 </tr>
                 <tr>
                   <td style={tdStyle}><kbd style={kbdStyle}>Esc</kbd></td>

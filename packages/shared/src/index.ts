@@ -1,4 +1,4 @@
-export type ContentType = 'text/plain' | 'text/markdown' | 'image/png';
+export type ContentType = 'text/plain' | 'text/markdown' | 'image/png' | 'application/octet-stream';
 
 export interface EncryptedPayload {
   iv: string;
@@ -12,18 +12,23 @@ export interface PeerMeta {
   joinedAt: number;
 }
 
+export interface PreviewMeta {
+  charCount?: number;
+  lineCount?: number;
+  byteSize?: number;
+  imageWidth?: number;
+  imageHeight?: number;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+}
+
 export interface ClipItemPayload {
   itemId: string;
   contentType: ContentType;
   iv: string;
   ciphertext: string;
-  previewMeta?: {
-    charCount?: number;
-    lineCount?: number;
-    byteSize?: number;
-    imageWidth?: number;
-    imageHeight?: number;
-  };
+  previewMeta?: PreviewMeta;
   createdAt: number;
   senderName: string;
   senderOs: string;
@@ -35,13 +40,7 @@ export interface InMemoryClip {
   contentType: ContentType;
   decryptedContent: string;
   previewUrl?: string;
-  previewMeta?: {
-    charCount?: number;
-    lineCount?: number;
-    byteSize?: number;
-    imageWidth?: number;
-    imageHeight?: number;
-  };
+  previewMeta?: PreviewMeta;
   senderDeviceId: string;
   senderName: string;
   senderOs: string;

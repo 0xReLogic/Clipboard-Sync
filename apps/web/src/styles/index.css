@@ -236,6 +236,44 @@ body {
   border-color: var(--border-active);
 }
 
+.quick-input-card.is-dragging {
+  border-color: var(--accent-primary);
+  background: rgba(30, 215, 96, 0.05);
+}
+
+.input-field-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.drag-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 14, 12, 0.88);
+  backdrop-filter: blur(4px);
+  border: 2px dashed var(--accent-primary);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--accent-primary);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.file-error-banner {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
 .quick-textarea {
   width: 100%;
   min-height: 90px;
@@ -260,6 +298,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-attach {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .input-hint {
@@ -401,6 +452,74 @@ body {
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
   object-fit: contain;
+}
+
+/* File Attachment Box */
+.clip-file-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.clip-file-box:hover {
+  border-color: var(--border-active);
+}
+
+.file-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.file-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.btn-file-download {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.btn-download {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.btn-download:hover {
+  background: var(--bg-highlight);
+  border-color: var(--border-active);
 }
 
 /* Modal Overlay */
